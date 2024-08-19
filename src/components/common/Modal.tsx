@@ -9,7 +9,7 @@ import {
 } from '@chakra-ui/react';
 
 interface Modal {
-  title?: string;
+  title: string;
   isOpen: boolean;
   onClose: () => void;
   body: JSX.Element | string;
