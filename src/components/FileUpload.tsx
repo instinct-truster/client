@@ -14,6 +14,7 @@ function FileUpload() {
     if (file === null) {
       return;
     }
+
     const validFileSize = await validateFileSize(file[0].size);
     const validFileType = await validateFileType(FileService.getFileExtension(file[0].name));
 
@@ -28,6 +29,9 @@ function FileUpload() {
     if (uploadFormError && validFileSize.isValid) {
       setUploadFormError('');
     }
+
+    const fileService = new FileService(file[0]);
+    fileService.uploadFile();
   };
   return (
     <Box width="50%" m="100px auto" padding="2" shadow="base">
@@ -45,6 +49,7 @@ function FileUpload() {
         )}
         <Box mt="10" ml="24">
           <Input
+            accept="image/jpeg, image/png, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             type="file"
             variant="unstyled"
             onChange={(e: SyntheticEvent) => handleFileUpload(e.currentTarget as HTMLInputElement)}
