@@ -1,10 +1,11 @@
 import { SyntheticEvent, useState } from 'react';
-import { Box, Text, Flex, Button, Input, createStandaloneToast } from '@chakra-ui/react';
+import { Box, Text, Flex, Button, Input, useToast } from '@chakra-ui/react';
 import AcceptedFileTypesModal from './AcceptedFileTypesModal';
 import { validateFileSize, validateFileType } from '../service/fileValidatorService';
 import FileService from '../service/fileService';
 
 function FileUpload() {
+  const toast = useToast();
   const [isFileTypesModalOpen, setIsFileTypesModalOpen] = useState<boolean>(false);
   const [uploadFormError, setUploadFormError] = useState<string>('');
 
@@ -36,8 +37,6 @@ function FileUpload() {
     const fileUploadResponse = await fileService.uploadFile();
 
     element.value = '';
-
-    const toast = createStandaloneToast();
 
     toast({
       title: fileUploadResponse.success ? 'File Upoaded' : 'Upload Failed',
