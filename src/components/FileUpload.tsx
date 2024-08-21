@@ -1,5 +1,5 @@
 import { SyntheticEvent, useState } from 'react';
-import { Box, Text, Flex, Button, Input } from '@chakra-ui/react';
+import { Box, Text, Flex, Button, Input, createStandaloneToast } from '@chakra-ui/react';
 import AcceptedFileTypesModal from './AcceptedFileTypesModal';
 import { validateFileSize, validateFileType } from '../service/fileValidatorService';
 import FileService from '../service/fileService';
@@ -11,7 +11,7 @@ function FileUpload() {
   const handleFileUpload = async (element: HTMLInputElement) => {
     const file = element.files;
 
-    if (file === null) {
+    if (!file) {
       return;
     }
 
@@ -20,10 +20,12 @@ function FileUpload() {
 
     if (!validFileSize.isValid) {
       setUploadFormError(validFileSize.errorMessage);
+      return;
     }
 
     if (!validFileType.isValid) {
       setUploadFormError(validFileType.errorMessage);
+      return;
     }
 
     if (uploadFormError && validFileSize.isValid) {
@@ -31,8 +33,21 @@ function FileUpload() {
     }
 
     const fileService = new FileService(file[0]);
-    fileService.uploadFile();
+    const fileUploadResponse = await fileService.uploadFile();
+
+    element.value = '';
+
+    const toast = createStandaloneToast();
+
+    toast({
+      title: fileUploadResponse.success ? 'File Upoaded' : 'Upload Failed',
+      description: fileUploadResponse.message,
+      status: fileUploadResponse.success ? 'success' : 'error',
+      duration: 3000,
+      isClosable: true,
+    });
   };
+
   return (
     <Box width="50%" m="100px auto" padding="2" shadow="base">
       <Flex direction="column" alignItems="center" mb="5">

@@ -1,4 +1,4 @@
-interface UploadFileResponse {
+export interface UploadFileResponse {
   success: boolean;
   message: string;
 }
@@ -26,9 +26,18 @@ class FileService {
       body: this.getFormData(),
     });
 
+    const responseJson = await uploadResponse.json();
+
+    if (responseJson.success === false) {
+      return {
+        success: false,
+        message: responseJson.message,
+      };
+    }
+
     return {
       success: true,
-      message: '',
+      message: 'Uploaded Successfully',
     };
   }
 
