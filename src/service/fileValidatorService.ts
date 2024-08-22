@@ -3,10 +3,10 @@ interface ValidatorResponse {
   errorMessage: string;
 }
 
-const fileTypes = ['jpg', 'png', 'doc', 'docx'];
+const fileTypes = ['jpg', 'png', 'doc', 'docx', 'mp4'];
 
 async function validateFileSize(fileSize: number): Promise<ValidatorResponse> {
-  const documentFileSizeValidator = (await import('../validators/DocumentFileSizeValidator')).default;
+  const documentFileSizeValidator = (await import('../validators/FileSizeValidator')).default;
 
   const validator = new documentFileSizeValidator(fileSize);
   const isValid = validator.validateFileSize();

@@ -5,9 +5,18 @@ export interface UploadFileResponse {
 
 class FileService {
   private file: File;
+  private fileSessionId: number = 0;
+  private fileName: string = '';
+  private totalFileBlocks: number = 0;
+  private maxFileBlockSize: number = 20971520; //20MB
+  private fileBlockCount: number = 0;
+
+  private startBlock: number = 0;
+  private endBlock: number = 0;
 
   constructor(file: File) {
     this.file = file;
+    this.setTotalFileBlocks();
   }
 
   static getFileExtension(fileName: string): string {
@@ -20,8 +29,12 @@ class FileService {
     return fileNames[fileNames.length - 1];
   }
 
+  private setTotalFileBlocks() {
+    this.totalFileBlocks = this.file.size / this.maxFileBlockSize;
+  }
+
   async uploadFile(): Promise<UploadFileResponse> {
-    const uploadResponse = await fetch('http://localhost:5000/uploadFile', {
+    const uploadResponse = await fetch('http://localhost:5000/createFileUploadSession', {
       method: 'POST',
       body: this.getFormData(),
     });

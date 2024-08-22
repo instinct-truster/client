@@ -1,5 +1,5 @@
 import { SyntheticEvent, useState } from 'react';
-import { Box, Text, Flex, Button, Input, useToast } from '@chakra-ui/react';
+import { Box, Text, Flex, Button, Input, useToast, CircularProgress, CircularProgressLabel } from '@chakra-ui/react';
 import AcceptedFileTypesModal from './AcceptedFileTypesModal';
 import { validateFileSize, validateFileType } from '../service/fileValidatorService';
 import FileService from '../service/fileService';
@@ -8,6 +8,7 @@ function FileUpload() {
   const toast = useToast();
   const [isFileTypesModalOpen, setIsFileTypesModalOpen] = useState<boolean>(false);
   const [uploadFormError, setUploadFormError] = useState<string>('');
+  const [fileUploadPercentage, setFileUploadPercentage] = useState<number | undefined>(undefined);
 
   const handleFileUpload = async (element: HTMLInputElement) => {
     const file = element.files;
@@ -42,7 +43,7 @@ function FileUpload() {
       title: fileUploadResponse.success ? 'File Upoaded' : 'Upload Failed',
       description: fileUploadResponse.message,
       status: fileUploadResponse.success ? 'success' : 'error',
-      duration: 3000,
+      duration: 5000,
       isClosable: true,
     });
   };
@@ -63,12 +64,18 @@ function FileUpload() {
         )}
         <Box mt="10" ml="24">
           <Input
-            accept="image/jpeg, image/png, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             type="file"
             variant="unstyled"
             onChange={(e: SyntheticEvent) => handleFileUpload(e.currentTarget as HTMLInputElement)}
           />
         </Box>
+        {typeof fileUploadPercentage === 'number' && (
+          <Box mt="10">
+            <CircularProgress value={fileUploadPercentage} color="green.400">
+              <CircularProgressLabel>{`${fileUploadPercentage}%`}</CircularProgressLabel>
+            </CircularProgress>
+          </Box>
+        )}
       </Flex>
       <AcceptedFileTypesModal isOpen={isFileTypesModalOpen} onClose={() => setIsFileTypesModalOpen(false)} />
     </Box>
