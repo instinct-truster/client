@@ -35,7 +35,7 @@ function FileUpload() {
     }
 
     const fileService = new FileService(file[0]);
-    const fileUploadResponse = await fileService.uploadFile();
+    const fileUploadResponse = await fileService.createFileUploadSession();
 
     element.value = '';
 

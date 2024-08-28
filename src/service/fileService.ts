@@ -33,8 +33,31 @@ class FileService {
     this.totalFileBlocks = this.file.size / this.maxFileBlockSize;
   }
 
+  async createFileUploadSession(): Promise<{ success: boolean; message?: string }> {
+    const fileSessionResponse = await fetch('http://localhost:5000/createFileUploadSession', {
+      method: 'POST',
+      body: this.getFileSessionDetails(),
+    });
+
+    const responseJson = await fileSessionResponse.json();
+
+    if (responseJson.success === false) {
+      return {
+        success: false,
+        message: responseJson.message,
+      };
+    }
+
+    this.fileSessionId = responseJson.fileSessionId;
+    this.fileName = responseJson.fileName;
+
+    return {
+      success: true,
+    };
+  }
+
   async uploadFile(): Promise<UploadFileResponse> {
-    const uploadResponse = await fetch('http://localhost:5000/createFileUploadSession', {
+    const uploadResponse = await fetch('http://localhost:5000/uploadFile', {
       method: 'POST',
       body: this.getFormData(),
     });
@@ -52,6 +75,14 @@ class FileService {
       success: true,
       message: 'Uploaded Successfully',
     };
+  }
+
+  private getFileSessionDetails(): FormData {
+    const formData = new FormData();
+    formData.append('fileName', this.file.name);
+    formData.append('fileSize', this.file.size.toString());
+
+    return formData;
   }
 
   private getFormData(): FormData {
