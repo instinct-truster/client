@@ -1,12 +1,24 @@
 import { SyntheticEvent, useState } from 'react';
-import { Box, Text, Flex, Button, Input, useToast, CircularProgress, CircularProgressLabel } from '@chakra-ui/react';
+
+import {
+  Box,
+  Text,
+  Flex,
+  Button,
+  Input,
+  createStandaloneToast,
+  CircularProgress,
+  CircularProgressLabel,
+  useToast,
+} from '@chakra-ui/react';
+
 import AcceptedFileTypesModal from './AcceptedFileTypesModal';
 import { validateFileSize, validateFileType } from '../service/fileValidatorService';
 import FileService from '../service/fileService';
 
 function FileUpload() {
   const toast = useToast();
-  const [isFileTypesModalOpen, setIsFileTypesModalOpen] = useState<boolean>(false);
+  const [isFileTypesModalOpen, setIsFilesTypeModalOpen] = useState<boolean>(false);
   const [uploadFormError, setUploadFormError] = useState<string>('');
   const [fileUploadPercentage, setFileUploadPercentage] = useState<number | undefined>(undefined);
 
@@ -22,11 +34,13 @@ function FileUpload() {
 
     if (!validFileSize.isValid) {
       setUploadFormError(validFileSize.errorMessage);
+      element.value = '';
       return;
     }
 
     if (!validFileType.isValid) {
       setUploadFormError(validFileType.errorMessage);
+      element.value = '';
       return;
     }
 
@@ -35,16 +49,47 @@ function FileUpload() {
     }
 
     const fileService = new FileService(file[0]);
-    const fileUploadResponse = await fileService.createFileUploadSession();
+    const fileSessionDetails = await fileService.createFileUploadSession();
 
-    element.value = '';
+    if (fileSessionDetails.success === false) {
+      setUploadFormError(fileSessionDetails.message ?? 'Error uploading file');
+      element.value = '';
+      return;
+    }
 
-    toast({
-      title: fileUploadResponse.success ? 'File Upoaded' : 'Upload Failed',
-      description: fileUploadResponse.message,
-      status: fileUploadResponse.success ? 'success' : 'error',
-      duration: 5000,
-      isClosable: true,
+    const uploadFile = async () => {
+      return fileService.uploadFile().then((response) => {
+        if (response.success === false) {
+          setUploadFormError(response.message);
+          setFileUploadPercentage(undefined);
+          element.value = '';
+          return Promise.reject(false);
+        }
+
+        setFileUploadPercentage(response.progress);
+
+        if (response.uploadNextBlock) {
+          uploadFile();
+        } else {
+          setFileUploadPercentage(undefined);
+          element.value = '';
+
+          toast({
+            title: response.success ? 'File Uploaded' : 'Upload Failed',
+            description: response.message,
+            status: response.success ? 'success' : 'error',
+            duration: 3000,
+            isClosable: true,
+          });
+          return Promise.resolve(response);
+        }
+      });
+    };
+
+    uploadFile().catch((error) => {
+      console.log(error);
+      setUploadFormError('Error occurred uploading the file');
+      element.value = '';
     });
   };
 
@@ -54,7 +99,7 @@ function FileUpload() {
         <Text fontSize="2xl" mb="4">
           Upload a Document
         </Text>
-        <Button size="sm" colorScheme="green" onClick={() => setIsFileTypesModalOpen(true)}>
+        <Button size="sm" colorScheme="green" onClick={() => setIsFilesTypeModalOpen(true)}>
           Accepted File Types
         </Button>
         {uploadFormError && (
@@ -77,7 +122,7 @@ function FileUpload() {
           </Box>
         )}
       </Flex>
-      <AcceptedFileTypesModal isOpen={isFileTypesModalOpen} onClose={() => setIsFileTypesModalOpen(false)} />
+      <AcceptedFileTypesModal isOpen={isFileTypesModalOpen} onClose={() => setIsFilesTypeModalOpen(false)} />
     </Box>
   );
 }

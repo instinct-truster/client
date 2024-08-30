@@ -5,10 +5,10 @@ interface Props {
   onClose: () => void;
 }
 
-const acceptedFilesTypes: string[] = ['jpg', 'png', 'docx', 'doc', 'mp4'];
+const acceptedFileTypes: string[] = ['jpeg', 'png', 'docx', 'doc'];
 
 function AcceptedFileTypesModal({ isOpen, onClose }: Props) {
-  return <Modal isOpen={isOpen} onClose={onClose} title="Accepted File Types" body={acceptedFilesTypes.join(', ')} />;
+  return <Modal isOpen={isOpen} onClose={onClose} title="Accepted File Types" body={acceptedFileTypes.join(', ')} />;
 }
 
 export default AcceptedFileTypesModal;

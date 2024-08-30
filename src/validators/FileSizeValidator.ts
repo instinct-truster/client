@@ -1,6 +1,6 @@
-class FileSizeValidator {
+class DocumentFileSizeValidator {
   private fileSizeInBytes: number;
-  private maxFileSizeInBytes: number = 2147483648; // 2GB
+  private maxFileSizeInBytes: number = 2147483648; //2gb
 
   constructor(fileSize: number) {
     this.fileSizeInBytes = fileSize;
@@ -11,8 +11,8 @@ class FileSizeValidator {
   }
 
   getErrorMessage(): string {
-    return 'Maximum file size is 2GB';
+    return 'Maximum file size accepted is 20MB.';
   }
 }
 
-export default FileSizeValidator;
+export default DocumentFileSizeValidator;

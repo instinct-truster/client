@@ -1,6 +1,9 @@
-export interface UploadFileResponse {
+interface UploadFileResponse {
   success: boolean;
   message: string;
+  progress: number;
+  uploadNextBlock: boolean;
+  fileId?: number;
 }
 
 class FileService {
@@ -8,7 +11,7 @@ class FileService {
   private fileSessionId: number = 0;
   private fileName: string = '';
   private totalFileBlocks: number = 0;
-  private maxFileBlockSize: number = 20971520; //20MB
+  private maxFileBlockSize: number = 20971520;
   private fileBlockCount: number = 0;
 
   private startBlock: number = 0;
@@ -30,7 +33,7 @@ class FileService {
   }
 
   private setTotalFileBlocks() {
-    this.totalFileBlocks = this.file.size / this.maxFileBlockSize;
+    this.totalFileBlocks = Math.ceil(this.file.size / this.maxFileBlockSize);
   }
 
   async createFileUploadSession(): Promise<{ success: boolean; message?: string }> {
@@ -59,7 +62,7 @@ class FileService {
   async uploadFile(): Promise<UploadFileResponse> {
     const uploadResponse = await fetch('http://localhost:5000/uploadFile', {
       method: 'POST',
-      body: this.getFormData(),
+      body: this.getFileData(),
     });
 
     const responseJson = await uploadResponse.json();
@@ -68,27 +71,67 @@ class FileService {
       return {
         success: false,
         message: responseJson.message,
+        progress: 0,
+        uploadNextBlock: false,
       };
     }
 
-    return {
+    const uploadFileResponse: UploadFileResponse = {
       success: true,
-      message: 'Uploaded Successfully',
+      message: '',
+      progress: this.calculateUploadProgress(),
+      uploadNextBlock: !this.isLastBlock(),
     };
+
+    if (responseJson.fileId > 0) {
+      uploadFileResponse.fileId = responseJson.fileId;
+      uploadFileResponse.message = 'Uploaded Successfully';
+    }
+
+    return uploadFileResponse;
+  }
+
+  private calculateUploadProgress(): number {
+    if (this.totalFileBlocks === 1) {
+      return 100;
+    }
+
+    return Math.round((this.fileBlockCount / this.totalFileBlocks) * 100);
   }
 
   private getFileSessionDetails(): FormData {
     const formData = new FormData();
+
     formData.append('fileName', this.file.name);
     formData.append('fileSize', this.file.size.toString());
 
     return formData;
   }
 
-  private getFormData(): FormData {
+  private getFileData(): FormData {
     const formData = new FormData();
-    formData.append('file', this.file);
+
+    formData.append('file', this.getFileBlock());
+    formData.append('fileSessionId', this.fileSessionId.toString());
+    formData.append('fileName', this.fileName);
+    formData.append('isLastBlock', this.isLastBlock() ? '1' : '0');
+
     return formData;
+  }
+
+  private getFileBlock(): Blob {
+    this.startBlock = this.endBlock;
+    this.endBlock = this.endBlock + this.maxFileBlockSize;
+
+    const blob = this.file.slice(this.startBlock, this.endBlock);
+
+    this.fileBlockCount += 1;
+
+    return blob;
+  }
+
+  private isLastBlock(): boolean {
+    return this.fileBlockCount === this.totalFileBlocks;
   }
 }
 
