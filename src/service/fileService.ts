@@ -37,26 +37,30 @@ class FileService {
   }
 
   async createFileUploadSession(): Promise<{ success: boolean; message?: string }> {
-    const fileSessionResponse = await fetch('http://localhost:5000/createFileUploadSession', {
-      method: 'POST',
-      body: this.getFileSessionDetails(),
-    });
+    try {
+      const fileSessionResponse = await fetch('http://localhost:5000/createFileUploadSession', {
+        method: 'POST',
+        body: this.getFileSessionDetails(),
+      });
 
-    const responseJson = await fileSessionResponse.json();
+      const responseJson = await fileSessionResponse.json();
+      if (responseJson.success === false) {
+        return {
+          success: false,
+          message: responseJson.message,
+        };
+      }
 
-    if (responseJson.success === false) {
+      this.fileSessionId = responseJson.fileSessionId;
+      this.fileName = responseJson.fileName;
+
+      return { success: true };
+    } catch {
       return {
         success: false,
-        message: responseJson.message,
+        message: 'failed to fetch',
       };
     }
-
-    this.fileSessionId = responseJson.fileSessionId;
-    this.fileName = responseJson.fileName;
-
-    return {
-      success: true,
-    };
   }
 
   async uploadFile(): Promise<UploadFileResponse> {
